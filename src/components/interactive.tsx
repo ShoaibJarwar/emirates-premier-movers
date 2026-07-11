@@ -2,6 +2,7 @@
 
 import { company, services } from "@/lib/site-data";
 import { whatsappUrl } from "@/lib/seo";
+import { sendInquiryEmail } from "@/lib/emailjs-client";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Phone, Send, ArrowUp, MessageCircle } from "lucide-react";
 import Link from "next/link";
@@ -78,6 +79,22 @@ export function LeadForm({ variant = "quote" }: { variant?: "quote" | "contact" 
         setState("success");
         setFeedback("Thank you. Your inquiry has been sent and our UAE moving coordinator will contact you shortly.");
         form.reset();
+
+        // Best-effort email notification via EmailJS. The inquiry is already safely
+        // stored (and WhatsApp-notified via Twilio) by the API call above, so a
+        // failure here doesn't affect the success message the customer sees.
+        void sendInquiryEmail({
+          to_name: company.name,
+          from_name: String(data.name ?? ""),
+          phone: String(data.phone ?? ""),
+          email: String(data.email ?? "Not provided"),
+          service: String(data.service ?? "Not specified"),
+          from_location: String(data.fromLocation ?? ""),
+          to_location: String(data.toLocation ?? ""),
+          move_date: String(data.moveDate ?? ""),
+          message: String(data.message ?? ""),
+          inquiry_type: variant,
+        });
       } else {
         setState("error");
         setFeedback(result.error ?? "We could not send the inquiry. Please call or WhatsApp us directly.");

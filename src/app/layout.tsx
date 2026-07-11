@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { Inter, Playfair_Display } from "next/font/google";
 import { Navbar, Footer, JsonLd } from "@/components/site";
 import { FloatingActions } from "@/components/interactive";
-import { ThemeProvider } from "@/components/theme-provider";
 import { company } from "@/lib/site-data";
 import { localBusinessSchema, organizationSchema } from "@/lib/seo";
 import "./globals.css";
@@ -37,13 +36,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en-AE" suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`} suppressHydrationWarning>
-        <ThemeProvider>
-          <JsonLd data={[organizationSchema(), localBusinessSchema()]} />
-          <Navbar />
-          {children}
-          <Footer />
-          <FloatingActions />
-        </ThemeProvider>
+        <JsonLd data={[organizationSchema(), localBusinessSchema()]} />
+        <Navbar />
+        {children}
+        <Footer />
+        <FloatingActions />
       </body>
     </html>
   );

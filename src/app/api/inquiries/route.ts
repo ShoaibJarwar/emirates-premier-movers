@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { inquiries } from "@/db/schema";
 import { company } from "@/lib/site-data";
 import { sql } from "drizzle-orm";
+import twilio from "twilio";
 
 export const dynamic = "force-dynamic";
 
@@ -58,81 +59,40 @@ async function ensureInquiriesTable() {
   `);
 }
 
-async function sendEmail(message: string, payload: InquiryPayload): Promise<IntegrationResult> {
-  const resendKey = process.env.RESEND_API_KEY;
-  const to = process.env.INQUIRY_EMAIL_TO ?? company.email;
-  const from = process.env.INQUIRY_EMAIL_FROM ?? "leads@emiratespremiermovers.ae";
-  const webhookUrl = process.env.EMAIL_WEBHOOK_URL;
+/**
+ * Sends a WhatsApp notification to the business owner via Twilio's WhatsApp API.
+ *
+ * Requires four env vars:
+ *   TWILIO_ACCOUNT_SID       - from the Twilio console
+ *   TWILIO_AUTH_TOKEN        - from the Twilio console
+ *   TWILIO_WHATSAPP_FROM     - your Twilio WhatsApp-enabled sender, e.g. "whatsapp:+14155238886"
+ *                              (the Twilio sandbox number while testing, or your approved
+ *                              WhatsApp Business sender once live)
+ *   TWILIO_WHATSAPP_TO       - the business owner's WhatsApp number, e.g. "whatsapp:+971501234567"
+ *
+ * Email is intentionally NOT handled here — that's done client-side via EmailJS
+ * (see src/lib/emailjs-client.ts) immediately after a successful submission.
+ */
+async function sendWhatsAppViaTwilio(message: string): Promise<IntegrationResult> {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_WHATSAPP_FROM;
+  const to = process.env.TWILIO_WHATSAPP_TO;
 
-  try {
-    if (resendKey) {
-      const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from,
-          to,
-          subject: `New moving inquiry from ${payload.name ?? "website"}`,
-          text: message,
-        }),
-      });
-      return { ok: response.ok, provider: "resend", detail: response.ok ? "sent" : await response.text() };
-    }
-
-    if (webhookUrl) {
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: `New moving inquiry from ${payload.name}`, message, payload }),
-      });
-      return { ok: response.ok, provider: "email-webhook", detail: response.ok ? "sent" : await response.text() };
-    }
-
-    return { ok: false, provider: "email", detail: "RESEND_API_KEY or EMAIL_WEBHOOK_URL is not configured" };
-  } catch (error) {
-    return { ok: false, provider: "email", detail: error instanceof Error ? error.message : "unknown error" };
+  if (!accountSid || !authToken || !from || !to) {
+    return {
+      ok: false,
+      provider: "twilio-whatsapp",
+      detail: "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM and TWILIO_WHATSAPP_TO must all be configured",
+    };
   }
-}
-
-async function sendWhatsApp(message: string, payload: InquiryPayload): Promise<IntegrationResult> {
-  const token = process.env.WHATSAPP_TOKEN;
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const to = process.env.WHATSAPP_INQUIRY_TO?.replace(/\D/g, "") ?? company.whatsappHref;
-  const webhookUrl = process.env.WHATSAPP_WEBHOOK_URL;
 
   try {
-    if (token && phoneNumberId) {
-      const response = await fetch(`https://graph.facebook.com/v20.0/${phoneNumberId}/messages`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to,
-          type: "text",
-          text: { preview_url: false, body: message },
-        }),
-      });
-      return { ok: response.ok, provider: "whatsapp-cloud", detail: response.ok ? "sent" : await response.text() };
-    }
-
-    if (webhookUrl) {
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, payload }),
-      });
-      return { ok: response.ok, provider: "whatsapp-webhook", detail: response.ok ? "sent" : await response.text() };
-    }
-
-    return { ok: false, provider: "whatsapp", detail: "WHATSAPP_TOKEN/WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_WEBHOOK_URL is not configured" };
+    const client = twilio(accountSid, authToken);
+    const result = await client.messages.create({ from, to, body: message });
+    return { ok: true, provider: "twilio-whatsapp", detail: result.sid };
   } catch (error) {
-    return { ok: false, provider: "whatsapp", detail: error instanceof Error ? error.message : "unknown error" };
+    return { ok: false, provider: "twilio-whatsapp", detail: error instanceof Error ? error.message : "unknown error" };
   }
 }
 
@@ -155,8 +115,8 @@ export async function POST(request: Request) {
   }
 
   const message = buildInquiryMessage(payload);
-  const [emailResult, whatsappResult] = await Promise.all([sendEmail(message, payload), sendWhatsApp(message, payload)]);
-  const integrationStatus = { email: emailResult, whatsapp: whatsappResult };
+  const whatsappResult = await sendWhatsAppViaTwilio(message);
+  const integrationStatus = { whatsapp: whatsappResult };
 
   await ensureInquiriesTable();
   await db.insert(inquiries).values({
@@ -172,16 +132,9 @@ export async function POST(request: Request) {
     integrationStatus,
   });
 
-  if (emailResult.ok || whatsappResult.ok) {
-    return Response.json({ ok: true, integrationStatus });
-  }
-
-  return Response.json(
-    {
-      ok: false,
-      error: "Your inquiry was saved, but email and WhatsApp delivery both failed. Please call or WhatsApp us directly.",
-      integrationStatus,
-    },
-    { status: 502 },
-  );
+  // The database write above is the source of truth for "we received your inquiry" —
+  // WhatsApp delivery is a best-effort notification on top of it, so a Twilio failure
+  // (e.g. not configured yet) doesn't block the customer's success message. Email
+  // notification happens separately, client-side, via EmailJS.
+  return Response.json({ ok: true, integrationStatus });
 }
