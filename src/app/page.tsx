@@ -1,4 +1,5 @@
 import { AreaCard, BlogCard, ContentShell, CTASection, Hero, InternalLinks, JsonLd, SectionHeader, ServiceCard, StatsBand, Testimonials, TrustGrid } from "@/components/site";
+import { LeadForm } from "@/components/interactive";
 import { areas, blogPosts, company, faqs, services } from "@/lib/site-data";
 import { breadcrumbSchema, faqSchema, pageMetadata, serviceSchema } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -18,7 +19,9 @@ export default function HomePage() {
         eyebrow="24/7 Premium UAE Moving Company"
         title="Careful movers and packers for homes, villas and offices across the UAE."
         description="Emirates Premier Movers delivers secure packing, experienced crews, covered trucks and transparent quotes for relocations in Sharjah, Ajman, Al Quoz, Dubai, Abu Dhabi and every emirate."
-      />
+      >
+        <LeadForm />
+      </Hero>
       <StatsBand />
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">

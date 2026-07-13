@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { ArrowRight, Check, Mail, MapPin, Menu, Phone, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FadeIn, FaqAccordion, LeadForm } from "@/components/interactive";
+import { FadeIn, FaqAccordion } from "@/components/interactive";
 
 export function JsonLd({ data }: { data: Record<string, unknown> | Record<string, unknown>[] }) {
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }} />;
@@ -115,7 +115,7 @@ export function Hero({ eyebrow, title, description, children }: { eyebrow?: stri
     <section className="relative overflow-hidden bg-slate-950 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.28),transparent_35%),linear-gradient(135deg,rgba(15,23,42,0.92),rgba(15,23,42,1))]" />
       <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-amber-500/20 blur-3xl" />
-      <div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 lg:py-28">
+      <div className={`relative mx-auto max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:px-8 lg:py-28 ${children ? "grid lg:grid-cols-[1.08fr_0.92fr]" : "max-w-4xl"}`}>
         <FadeIn>
           <div>
             {eyebrow ? <p className="mb-5 text-sm font-bold uppercase tracking-[0.24em] text-amber-300">{eyebrow}</p> : null}
@@ -127,11 +127,13 @@ export function Hero({ eyebrow, title, description, children }: { eyebrow?: stri
             </div>
           </div>
         </FadeIn>
-        <FadeIn delay={0.1}>
-          <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 shadow-2xl backdrop-blur">
-            {children ?? <LeadForm />}
-          </div>
-        </FadeIn>
+        {children ? (
+          <FadeIn delay={0.1}>
+            <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 shadow-2xl backdrop-blur">
+              {children}
+            </div>
+          </FadeIn>
+        ) : null}
       </div>
     </section>
   );

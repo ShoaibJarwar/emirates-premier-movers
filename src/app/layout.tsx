@@ -16,14 +16,20 @@ export const metadata: Metadata = {
     default: `${company.name} | Premium Movers and Packers UAE`,
     template: `%s | ${company.name}`,
   },
-  description: "Premium moving and packing company in Sharjah, Ajman, Al Quoz, Dubai, Abu Dhabi and across the UAE. 24/7 movers, secure packing and free quotes.",
+  description:
+    "Premium moving and packing company in Sharjah, Ajman, Al Quoz, Dubai, Abu Dhabi and across the UAE. 24/7 movers, secure packing and free quotes.",
   applicationName: company.name,
+  verification: {
+    google: "orqsH3Gz3_w2F6JbqzZu7uACcO80HtKWNsGTN0iqkUE",
+  },
   openGraph: {
     siteName: company.name,
     locale: "en_AE",
     type: "website",
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export const viewport: Viewport = {
