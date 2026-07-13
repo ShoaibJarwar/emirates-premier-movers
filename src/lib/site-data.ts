@@ -65,7 +65,7 @@ export const company = {
   email: "bookings@emiratespremiermovers.ae",
   address: "Office 1204, King Faisal Street, Sharjah, United Arab Emirates",
   hours: "Open 24 hours, 7 days a week",
-  baseUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.emiratespremiermovers.ae",
+  baseUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://emirates-premier-movers.vercel.app",
   tagline: "Premium movers and packers across Sharjah, Ajman, Dubai and the UAE.",
 };
 
