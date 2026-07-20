@@ -1,10 +1,10 @@
 import { areas, blogPosts, company, navItems, pricing, services, stats, testimonials, trustPoints } from "@/lib/site-data";
 import { absoluteUrl, whatsappUrl } from "@/lib/seo";
 import type { ReactNode } from "react";
-import { ArrowRight, Check, Mail, MapPin, Menu, Phone, Star } from "lucide-react";
+import { ArrowRight, Check, Mail, MapPin, Phone, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FadeIn, FaqAccordion } from "@/components/interactive";
+import { FadeIn, FaqAccordion, MobileMenu } from "@/components/interactive";
 
 export function JsonLd({ data }: { data: Record<string, unknown> | Record<string, unknown>[] }) {
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }} />;
@@ -27,7 +27,7 @@ export function ButtonLink({ href, children, variant = "primary" }: { href: stri
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/20 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3" aria-label={`${company.name} home`}>
           <Image src="/brand-mark.svg" alt="" width={44} height={44} priority />
           <div>
@@ -48,9 +48,7 @@ export function Navbar() {
           </Link>
           <ButtonLink href="/get-a-free-quote">Free Quote</ButtonLink>
         </div>
-        <Link href="/sitemap" className="rounded-full border border-slate-200 p-2 text-slate-700 lg:hidden" aria-label="Open site navigation">
-          <Menu className="h-6 w-6" aria-hidden="true" />
-        </Link>
+        <MobileMenu navItems={navItems} phone={company.phone} phoneHref={company.phoneHref} />
       </div>
     </header>
   );
