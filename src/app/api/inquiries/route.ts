@@ -229,7 +229,21 @@ export async function POST(request: Request) {
     // table not yet migrated) but never leak internals to the client — return a
     // clean JSON error so the frontend can show a clear message instead of a
     // generic network error.
-    console.error("Failed to save inquiry to the database:", error);
+    // Postgres error code 42P01 = "relation does not exist". drizzle-orm wraps the
+    // raw pg driver error in `error.cause` (standard Error.cause chaining) rather
+    // than exposing `code` on the top-level error, so both need checking.
+    const errorCode = (error as { code?: string })?.code ?? (error as { cause?: { code?: string } })?.cause?.code;
+    const isMissingTable = errorCode === "42P01";
+    if (isMissingTable) {
+      console.error(
+        "Failed to save inquiry: the `inquiries` table does not exist in this database yet. " +
+          "Run `npx drizzle-kit push` against this DATABASE_URL to create it, then try again. " +
+          "Raw error:",
+        error,
+      );
+    } else {
+      console.error("Failed to save inquiry to the database:", error);
+    }
     return Response.json(
       { ok: false, error: "We could not save your inquiry right now. Please call or WhatsApp us directly." },
       { status: 500 },

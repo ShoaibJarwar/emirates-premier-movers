@@ -47,15 +47,24 @@ Steps 2 and 3 are independent and best-effort — if Twilio or Resend isn't conf
 
 ### Database
 
-The `inquiries` table is **not** created automatically — run this once after setting `DATABASE_URL`, before your first deployment or `npm run dev`:
+The `inquiries` table is **not** created automatically — you need to run one command, once, against whichever database you're using:
 
 ```bash
-npx drizzle-kit push   # sync src/db/schema.ts to the database in drizzle.config.json
+npx drizzle-kit push   # sync src/db/schema.ts to the DATABASE_URL currently in .env or .env.local
 ```
 
-(Earlier versions of this project ran a `CREATE TABLE IF NOT EXISTS` check on every single form submission. That was replaced with this one-time step for performance — no schema query runs on the request path anymore.)
+`drizzle-kit push` reads `DATABASE_URL` from your `.env` file (via `drizzle.config.ts`) — it does **not** know about Vercel's environment variables, and Vercel does **not** run this command for you on deploy. This means:
 
-Update `drizzle.config.json` (or better, wire it to read `process.env.DATABASE_URL`) before running this against a non-local database.
+- **Local development:** put your local (or dev) database's connection string in `.env`, run the command once, done.
+- **Production (Vercel, or wherever you host):** this is the step that's easy to miss. Adding `DATABASE_URL` to Vercel's environment variables makes your *deployed app* able to connect to the database — it does **not** create the table there. You still need to run `npx drizzle-kit push` yourself, from your own machine, with your **production** `DATABASE_URL` in `.env` at that moment. The steps:
+  1. Copy your production database's connection string (from Neon, Supabase, Vercel Postgres, etc. — the same value you put in Vercel's project settings).
+  2. Temporarily set `DATABASE_URL` to that value in your local `.env` file.
+  3. Run `npx drizzle-kit push`.
+  4. Switch `.env` back to your local database URL for day-to-day development.
+
+If you skip this against production, form submissions will fail with *"We could not save your inquiry right now"* even though `DATABASE_URL` is correctly set in Vercel — the app can reach the database, but the table it's trying to write to doesn't exist yet. The server logs (Vercel → your project → Logs, or `vercel logs`) will say exactly this if it happens: `the inquiries table does not exist in this database yet`.
+
+(Earlier versions of this project ran a `CREATE TABLE IF NOT EXISTS` check on every single form submission. That was replaced with this one-time step for performance — no schema query runs on the request path anymore.)
 
 ## Scripts
 
