@@ -2,7 +2,6 @@
 
 import { company, services } from "@/lib/site-data";
 import { whatsappUrl } from "@/lib/seo";
-import { sendInquiryEmail } from "@/lib/emailjs-client";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Phone, Send, ArrowUp, MessageCircle, Menu, X } from "lucide-react";
 import Link from "next/link";
@@ -79,26 +78,36 @@ export function FaqAccordion({ items }: { items: { question: string; answer: str
   const [open, setOpen] = useState(0);
   return (
     <div className="space-y-3">
-      {items.map((item, index) => (
-        <div key={item.question} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <button
-            type="button"
-            onClick={() => setOpen(open === index ? -1 : index)}
-            className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-slate-950"
-            aria-expanded={open === index}
-          >
-            <span>{item.question}</span>
-            <ChevronDown className={`h-5 w-5 shrink-0 text-amber-600 transition ${open === index ? "rotate-180" : ""}`} aria-hidden="true" />
-          </button>
-          <AnimatePresence initial={false}>
-            {open === index ? (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                <p className="px-5 pb-5 text-sm leading-7 text-slate-600">{item.answer}</p>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-        </div>
-      ))}
+      {items.map((item, index) => {
+        const panelId = `faq-panel-${index}`;
+        const isOpen = open === index;
+        return (
+          <div key={item.question} className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <button
+              type="button"
+              onClick={() => setOpen(isOpen ? -1 : index)}
+              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-slate-950"
+              aria-expanded={isOpen}
+              aria-controls={panelId}
+            >
+              <span>{item.question}</span>
+              <ChevronDown className={`h-5 w-5 shrink-0 text-amber-600 transition ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+            </button>
+            {/* Panel stays mounted at all times (never conditionally rendered to null) so its
+                content remains present for screen readers and non-JS crawlers; only its height
+                and opacity animate to show/hide it visually. */}
+            <motion.div
+              id={panelId}
+              initial={false}
+              animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <p className="px-5 pb-5 text-sm leading-7 text-slate-600">{item.answer}</p>
+            </motion.div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -136,22 +145,6 @@ export function LeadForm({ variant = "quote" }: { variant?: "quote" | "contact" 
         setState("success");
         setFeedback("Thank you. Your inquiry has been sent and our UAE moving coordinator will contact you shortly.");
         form.reset();
-
-        // Best-effort email notification via EmailJS. The inquiry is already safely
-        // stored (and WhatsApp-notified via Twilio) by the API call above, so a
-        // failure here doesn't affect the success message the customer sees.
-        void sendInquiryEmail({
-          to_name: company.name,
-          from_name: String(data.name ?? ""),
-          phone: String(data.phone ?? ""),
-          email: String(data.email ?? "Not provided"),
-          service: String(data.service ?? "Not specified"),
-          from_location: String(data.fromLocation ?? ""),
-          to_location: String(data.toLocation ?? ""),
-          move_date: String(data.moveDate ?? ""),
-          message: String(data.message ?? ""),
-          inquiry_type: variant,
-        });
       } else {
         setState("error");
         setFeedback(result.error ?? "We could not send the inquiry. Please call or WhatsApp us directly.");
@@ -208,8 +201,16 @@ export function LeadForm({ variant = "quote" }: { variant?: "quote" | "contact" 
         <Send className="h-5 w-5" aria-hidden="true" />
         {state === "loading" ? "Sending inquiry..." : variant === "quote" ? "Get my free quote" : "Send message"}
       </button>
-      {feedback ? <p className={`mt-4 rounded-2xl px-4 py-3 text-sm ${state === "success" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>{feedback}</p> : null}
-      <p className="mt-4 text-xs leading-6 text-slate-500">By submitting, you agree to be contacted by phone, WhatsApp or email about your moving inquiry. We never use default HTML form submission.</p>
+      {feedback ? (
+        <p
+          className={`mt-4 rounded-2xl px-4 py-3 text-sm ${state === "success" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}
+          aria-live="polite"
+          role={state === "error" ? "alert" : undefined}
+        >
+          {feedback}
+        </p>
+      ) : null}
+      <p className="mt-4 text-xs leading-6 text-slate-500">By submitting, you agree to be contacted by phone, WhatsApp or email about your moving inquiry.</p>
     </form>
   );
 }
@@ -218,7 +219,7 @@ export function FloatingActions() {
   const message = `Hello ${company.name}, I need a moving quote in the UAE.`;
   return (
     <div className="fixed bottom-5 right-4 z-50 flex flex-col gap-3 sm:right-6">
-      <Link href={whatsappUrl(message)} target="_blank" className="flex h-13 w-13 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xl shadow-emerald-900/20 transition hover:-translate-y-1 hover:bg-emerald-600" aria-label="Chat on WhatsApp">
+      <Link href={whatsappUrl(message)} target="_blank" rel="noopener noreferrer" className="flex h-13 w-13 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xl shadow-emerald-900/20 transition hover:-translate-y-1 hover:bg-emerald-600" aria-label="Chat on WhatsApp">
         <MessageCircle className="h-6 w-6" aria-hidden="true" />
       </Link>
       <Link href={`tel:${company.phoneHref}`} className="flex h-13 w-13 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow-2xl shadow-amber-900/20 transition hover:-translate-y-1 hover:bg-amber-400" aria-label="Call now">

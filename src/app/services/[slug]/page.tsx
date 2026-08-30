@@ -2,6 +2,7 @@ import { ContentShell, CTASection, FaqSection, Hero, JsonLd, SectionHeader, Serv
 import { getService, services } from "@/lib/site-data";
 import { breadcrumbSchema, faqSchema, pageMetadata, serviceSchema } from "@/lib/seo";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export function generateStaticParams() {
@@ -34,10 +35,13 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
               <div className="mt-4 flex flex-wrap gap-2">
                 {service.keywords.map((keyword) => <span key={keyword} className="rounded-full bg-white/10 px-3 py-1 text-sm text-amber-200">{keyword}</span>)}
               </div>
+              <p className="mt-5 text-sm text-slate-300">
+                Looking for <Link href="/areas/sharjah" className="font-semibold text-amber-300 underline underline-offset-2">{service.shortTitle.toLowerCase()} in Sharjah</Link>? It&apos;s our home base — see local coverage, or browse {service.shortTitle.toLowerCase()} across the wider UAE below.
+              </p>
             </div>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
-            {service.benefits.map((benefit) => <div key={benefit} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><h3 className="font-bold text-slate-950">{benefit}</h3><p className="mt-2 text-sm leading-7 text-slate-600">A supervised process keeps your move organised, protected and on schedule from first call to final placement.</p></div>)}
+            {service.benefits.map((benefit) => <div key={benefit.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><h3 className="font-bold text-slate-950">{benefit.title}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{benefit.description}</p></div>)}
           </div>
         </div>
       </section>

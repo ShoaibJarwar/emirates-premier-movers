@@ -77,9 +77,9 @@ export function Footer() {
         <div>
           <h2 className="font-bold">Contact</h2>
           <ul className="mt-4 space-y-3 text-sm text-slate-300">
-            <li className="flex gap-2"><Phone className="h-4 w-4 text-amber-400" /> <Link href={`tel:${company.phoneHref}`}>{company.phone}</Link></li>
-            <li className="flex gap-2"><Mail className="h-4 w-4 text-amber-400" /> <Link href={`mailto:${company.email}`}>{company.email}</Link></li>
-            <li className="flex gap-2"><MapPin className="h-4 w-4 shrink-0 text-amber-400" /> <span>{company.address}</span></li>
+            <li className="flex gap-2"><Phone className="h-4 w-4 text-amber-400" aria-hidden="true" /> <Link href={`tel:${company.phoneHref}`}>{company.phone}</Link></li>
+            <li className="flex gap-2"><Mail className="h-4 w-4 text-amber-400" aria-hidden="true" /> <Link href={`mailto:${company.email}`}>{company.email}</Link></li>
+            <li className="flex gap-2"><MapPin className="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" /> <span>{company.address}</span></li>
           </ul>
           <div className="mt-5 flex flex-wrap gap-3 text-xs text-slate-400">
             <Link href="/privacy-policy">Privacy</Link>
@@ -207,7 +207,10 @@ export function Testimonials() {
     <div className="grid gap-5 md:grid-cols-3">
       {testimonials.map((testimonial) => (
         <div key={testimonial.name} className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex gap-1 text-amber-500">{Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-4 w-4 fill-current" />)}</div>
+          <div className="flex gap-1 text-amber-500">
+            {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-4 w-4 fill-current" aria-hidden="true" />)}
+            <span className="sr-only">Rated 5 out of 5 stars</span>
+          </div>
           <p className="mt-4 text-sm leading-7 text-slate-700">“{testimonial.quote}”</p>
           <p className="mt-5 font-bold text-slate-950">{testimonial.name}</p>
           <p className="text-sm text-slate-500">{testimonial.location}</p>

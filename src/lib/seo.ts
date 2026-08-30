@@ -26,7 +26,12 @@ export function pageMetadata({
   const fullTitle = title.includes(company.name) ? title : `${title} | ${company.name}`;
 
   return {
-    title: fullTitle,
+    // `title.absolute` explicitly overrides the root layout's `title.template`
+    // (`"%s | ${company.name}"`). A plain string here would otherwise have that
+    // template applied on top of `fullTitle`, which already ends in the company
+    // name, resulting in "... | Emirates Premier Movers | Emirates Premier Movers"
+    // in the browser tab and search results.
+    title: { absolute: fullTitle },
     description,
     keywords,
     alternates: { canonical: url },
@@ -80,6 +85,16 @@ export function localBusinessSchema() {
       "@type": "PostalAddress",
       streetAddress: company.address,
       addressCountry: "AE",
+    },
+    // Coordinates for King Faisal Street, Al Majaz, Sharjah — the street the office
+    // address is on. Update if the real office address ever changes to a different
+    // street. Deliberately no `aggregateRating`: schema.org and Google guidelines
+    // require it to reflect real, verifiable reviews — never fabricate a rating or
+    // review count. Add it once genuine review data exists to back it.
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 25.3337,
+      longitude: 55.3918,
     },
   };
 }

@@ -1,7 +1,8 @@
-import { ContentShell, CTASection, Hero, InternalLinks, JsonLd, SectionHeader, ServiceCard, TrustGrid } from "@/components/site";
+import { ContentShell, CTASection, FaqSection, Hero, InternalLinks, JsonLd, SectionHeader, ServiceCard, TrustGrid } from "@/components/site";
 import { areas, getArea, services } from "@/lib/site-data";
-import { breadcrumbSchema, pageMetadata, serviceSchema } from "@/lib/seo";
+import { breadcrumbSchema, faqSchema, pageMetadata, serviceSchema } from "@/lib/seo";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export function generateStaticParams() {
@@ -19,17 +20,24 @@ export default async function AreaPage({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const area = getArea(slug);
   if (!area) notFound();
+  const introParagraphs = area.intro.split("\n\n");
 
   return (
     <ContentShell>
-      <JsonLd data={[serviceSchema(area.title, area.description, `/areas/${area.slug}`), breadcrumbSchema([{ name: "Home", href: "/" }, { name: "Areas", href: "/areas" }, { name: area.name, href: `/areas/${area.slug}` }])]} />
+      <JsonLd
+        data={[
+          serviceSchema(area.title, area.description, `/areas/${area.slug}`),
+          faqSchema(area.faqs),
+          breadcrumbSchema([{ name: "Home", href: "/" }, { name: "Areas", href: "/areas" }, { name: area.name, href: `/areas/${area.slug}` }]),
+        ]}
+      />
       <Hero eyebrow="Local UAE movers" title={area.title} description={area.description} />
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="prose-moving">
             <h2>Reliable moving company in {area.name}</h2>
-            <p>{area.intro}</p>
-            <p>Our moving coordinators plan each relocation around access rules, parking, elevators, dismantling, packing materials and route timing. Whether you need home moving, office relocation, villa moving or furniture movers in {area.name}, you receive a clear quote and a professional crew.</p>
+            {introParagraphs.map((paragraph) => <p key={paragraph.slice(0, 40)}>{paragraph}</p>)}
+            <p>Our moving coordinators plan each relocation around access rules, parking, elevators, dismantling, packing materials and route timing. Whether you need <Link href="/services/home-moving">home moving</Link>, <Link href="/services/office-relocation">office relocation</Link>, <Link href="/services/villa-moving">villa moving</Link>, <Link href="/services/packing-services">packing services</Link> or furniture movers in {area.name}, you receive a clear quote and a professional crew.</p>
             <h3>Popular communities we serve</h3>
             <p>{area.neighborhoods.join(", ")} and nearby communities are covered by our local moving teams with 24/7 support.</p>
             <InternalLinks />
@@ -49,6 +57,12 @@ export default async function AreaPage({ params }: { params: Promise<{ slug: str
         </div>
       </section>
       <section className="px-4 py-16 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><TrustGrid /></div></section>
+      <section className="bg-white px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          <SectionHeader eyebrow="FAQs" title={`${area.name} moving questions`} description="Answers to common questions from customers in this area." />
+          <FaqSection items={area.faqs} />
+        </div>
+      </section>
       <CTASection title={`Need movers in ${area.name}?`} description={`Get a fast quote for packing, moving, furniture assembly or office relocation in ${area.name} today.`} />
     </ContentShell>
   );
