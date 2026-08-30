@@ -3,6 +3,12 @@ import { Pool } from "pg";
 
 const databaseUrl = process.env.DATABASE_URL;
 
+// Hosted providers (Supabase, Neon, etc.) require SSL; a local Postgres instance
+// (localhost/127.0.0.1) generally isn't configured for it. `rejectUnauthorized: false`
+// is the standard pragmatic setting for providers like Supabase's pooler, whose
+// certificate chain isn't always fully validated by Node's default CA store.
+const isLocalDatabase = databaseUrl ? /^postgres(?:ql)?:\/\/[^@]*@(localhost|127\.0\.0\.1)/.test(databaseUrl) : true;
+
 const MISSING_URL_MESSAGE =
   "DATABASE_URL is not set. Add it in your hosting provider's project settings " +
   "(e.g. Vercel: Project → Settings → Environment Variables) and redeploy. " +
@@ -19,7 +25,7 @@ const globalForDb = globalThis as typeof globalThis & {
 // fail the entire build. Instead, the error surfaces lazily, only when a request
 // actually tries to use the database.
 export const pool: Pool | undefined = databaseUrl
-  ? (globalForDb.__arenaNextJsPostgresqlPool ?? new Pool({ connectionString: databaseUrl }))
+  ? (globalForDb.__arenaNextJsPostgresqlPool ?? new Pool({ connectionString: databaseUrl, ssl: isLocalDatabase ? undefined : { rejectUnauthorized: false } }))
   : undefined;
 
 if (pool && process.env.NODE_ENV !== "production") {
