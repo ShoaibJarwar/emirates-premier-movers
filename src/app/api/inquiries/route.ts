@@ -49,7 +49,7 @@ function buildInquiryMessage(payload: Required<Pick<InquiryPayload, "type" | "na
  *   TWILIO_WHATSAPP_FROM     - your Twilio WhatsApp-enabled sender, e.g. "whatsapp:+14155238886"
  *                              (the Twilio sandbox number while testing, or your approved
  *                              WhatsApp Business sender once live)
- *   TWILIO_WHATSAPP_TO       - the business owner's WhatsApp number, e.g. "whatsapp:+971501234567"
+ *   TWILIO_WHATSAPP_TO       - the business owner's WhatsApp number, e.g. "whatsapp:+971523834103"
  *
  * Email is handled separately by sendEmailViaResend, below.
  */
