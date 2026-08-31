@@ -3,7 +3,7 @@
 import { company, services } from "@/lib/site-data";
 import { whatsappUrl } from "@/lib/seo";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Phone, Send, ArrowUp, MessageCircle, Menu, X } from "lucide-react";
+import { ChevronDown, Phone, Send, ArrowUp, MessageCircle, Menu, X, PartyPopper } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, type ReactNode, useState } from "react";
 
@@ -143,7 +143,7 @@ export function LeadForm({ variant = "quote" }: { variant?: "quote" | "contact" 
       const result = (await response.json()) as { ok?: boolean; error?: string };
       if (response.ok && result.ok) {
         setState("success");
-        setFeedback("Thank you. Your inquiry has been sent and our UAE moving coordinator will contact you shortly.");
+        setFeedback("Our UAE moving coordinator has your details and will reach out shortly to get your move sorted.");
         form.reset();
       } else {
         setState("error");
@@ -202,13 +202,32 @@ export function LeadForm({ variant = "quote" }: { variant?: "quote" | "contact" 
         {state === "loading" ? "Sending inquiry..." : variant === "quote" ? "Get my free quote" : "Send message"}
       </button>
       {feedback ? (
-        <p
-          className={`mt-4 rounded-2xl px-4 py-3 text-sm ${state === "success" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}
-          aria-live="polite"
-          role={state === "error" ? "alert" : undefined}
-        >
-          {feedback}
-        </p>
+        state === "success" ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="mt-4 flex items-start gap-3 rounded-2xl bg-emerald-50 px-4 py-4 text-emerald-900"
+            aria-live="polite"
+          >
+            <motion.span
+              initial={{ scale: 0, rotate: -25 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.5, delay: 0.15, type: "spring", stiffness: 300, damping: 14 }}
+              className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white"
+            >
+              <PartyPopper className="h-5 w-5" aria-hidden="true" />
+            </motion.span>
+            <div>
+              <p className="font-bold">You&rsquo;re all set!</p>
+              <p className="mt-1 text-sm leading-6">{feedback}</p>
+            </div>
+          </motion.div>
+        ) : (
+          <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="polite">
+            {feedback}
+          </p>
+        )
       ) : null}
       <p className="mt-4 text-xs leading-6 text-slate-500">By submitting, you agree to be contacted by phone, WhatsApp or email about your moving inquiry.</p>
     </form>
