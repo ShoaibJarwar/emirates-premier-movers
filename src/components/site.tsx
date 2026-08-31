@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { ArrowRight, Check, Mail, MapPin, Phone, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FadeIn, FaqAccordion, MobileMenu } from "@/components/interactive";
+import { FadeIn, FaqAccordion, MobileMenu, NavLink } from "@/components/interactive";
 
 export function JsonLd({ data }: { data: Record<string, unknown> | Record<string, unknown>[] }) {
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }} />;
@@ -37,9 +37,15 @@ export function Navbar() {
         </Link>
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="rounded-full px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950">
+            <NavLink
+              key={item.href}
+              href={item.href}
+              className="rounded-full px-4 py-2 text-sm font-semibold transition"
+              activeClassName="bg-amber-50 text-amber-700"
+              inactiveClassName="text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+            >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
         <div className="hidden items-center gap-3 sm:flex">
