@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
 import { Inter, Playfair_Display } from "next/font/google";
 import { Navbar, Footer, JsonLd } from "@/components/site";
 import { FloatingActions } from "@/components/interactive";
@@ -38,7 +39,25 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en-AE" suppressHydrationWarning>
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${playfair.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+        {/* Google tag */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-BDJBCCL19K"
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-BDJBCCL19K');
+          `}
+        </Script>
+
         <JsonLd data={[organizationSchema(), localBusinessSchema()]} />
         <Navbar />
         {children}
